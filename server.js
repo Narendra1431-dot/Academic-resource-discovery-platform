@@ -19,7 +19,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? ['https://your-netlify-site.netlify.app'] : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+origin: process.env.NODE_ENV === 'production' ? ['https://aacadamic.netlify.app', 'https://aacademic.netlify.app'] : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true
 }));
 app.use(express.json());
