@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+</head>
+<body style="padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333;">
+  
+  <header style="text-align: center; margin-bottom: 60px;">
+    <h1 style="font-size: 48px; font-weight: 800; color: white; text-shadow: 0 4px 8px rgba(0,0,0,0.3); margin-bottom: 20px;">Student Dashboard</h1>
+    <div id="user-name" style="font-size: 24px; color: white; font-weight: 600;"></div>
+  </header>
+
+  <!-- Pure Inline Stats - NO BOXES -->
+  <div style="text-align: center; font-size: 28px; font-weight: 700; color: white; margin-bottom: 80px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+    📤 Uploads: <span id="myUploads" style="color: #10b981; font-size: 36px;">0</span> | 
+    ⏳ Pending: <span id="pendingUploads" style="color: #f59e0b; font-size: 36px;">0</span> | 
+    ✅ Approved: <span id="approvedUploads" style="color: #059669; font-size: 36px;">0</span> | 
+    ⬇ Downloads: <span id="myDownloads" style="color: #3b82f6; font-size: 36px;">0</span>
+  </div>
+
+  <!-- Recommended Section -->
+  <section style="max-width: 1100px; margin: 0 auto 40px auto;">
+    <h2 style="font-size: 32px; font-weight: 800; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.3); margin: 0 0 16px 0;">Recommended for You</h2>
+    <div id="recommended" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px;"></div>
+  </section>
+
+  <!-- My Uploads Section -->
+  <section style="max-width: 1100px; margin: 0 auto 40px auto;">
+    <h2 style="font-size: 32px; font-weight: 800; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.3); margin: 0 0 16px 0;">My Uploads</h2>
+    <div id="myUploadsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px;"></div>
+  </section>
+
+  <!-- Upload Form - Single Minimal Box -->
+  <div style="max-width: 500px; margin: 0 auto; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 24px; padding: 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
+    <h2 style="text-align: center; font-size: 32px; font-weight: 700; color: #1f2937; margin-bottom: 30px;">Upload Resource</h2>
+    <form id="uploadForm">
+      <div style="margin-bottom: 24px;">
+        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 16px;">Title</label>
+        <input type="text" id="title" required placeholder="Enter resource title" style="width: 100%; padding: 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s; box-sizing: border-box;">
+      </div>
+<div style="margin-bottom: 24px;">
+        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 16px;">Title</label>
+        <input type="text" id="title" required placeholder="e.g., Data Structures Notes" style="width: 100%; padding: 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s; box-sizing: border-box;">
+      </div>
+      <div style="margin-bottom: 24px;">
+        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 16px;">Subject</label>
+        <select id="subject" required style="width: 100%; padding: 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s; box-sizing: border-box;">
+          <option value="">Choose subject</option>
+          <option value="Data Structures">Data Structures</option>
+          <option value="Database">Database Management</option>
+          <option value="OS">Operating Systems</option>
+          <option value="Algorithms">Algorithms</option>
+        </select>
+      </div>
+      <div style="margin-bottom: 32px;">
+        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 16px;">File (PDF, ZIP, PNG, DOC, etc.)</label>
+        <input type="file" id="file" required style="width: 100%; padding: 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s; box-sizing: border-box;">
+      </div>
+      <button type="submit" style="width: 100%; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 20px; border: none; border-radius: 16px; font-size: 20px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);">
+        🚀 Upload & AI Review
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    
+    // Render recommendations
+    function renderRecommendations(items = []) {
+      const wrap = document.getElementById('recommended');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+      if (!items.length) {
+        wrap.innerHTML = '<div style="color: white; opacity: 0.9;">No recommendations yet. Download some resources to personalize suggestions.</div>';
+        return;
+      }
+      const typeIcon = (type) => {
+        const t = (type || '').toLowerCase();
+        if (t.includes('ppt')) return '📊';
+        if (t.includes('pyq')) return '📝';
+        if (t.includes('note')) return '📘';
+        if (t.includes('text')) return '📚';
+        return '📄';
+      };
+      items.forEach(r => {
+        const card = document.createElement('div');
+        card.style.cssText = 'background: rgba(255,255,255,0.95); border-radius: 16px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap:8px;';
+        card.innerHTML = `
+          <div style="font-size: 28px">${typeIcon(r.type)}</div>
+          <div style="font-weight: 800; color:#111827; font-size:18px;">${r.title}</div>
+          <div style="color:#6b7280; font-size:14px;">${r.subject || ''}</div>
+          <div style="display:flex; gap:8px; align-items:center; color:#6b7280; font-size:12px;">
+            <span>⭐ ${r.rating ?? 0}</span>
+            <span>•</span>
+            <span>⬇ ${r.downloads ?? 0}</span>
+          </div>
+          <a href="${r.fileUrl || '#'}" target="_blank" style="margin-top:auto; text-align:center; background:linear-gradient(135deg,#10b981,#3b82f6); color:white; padding:10px 12px; border-radius:10px; font-weight:700; text-decoration:none;">Download</a>
+        `;
+        wrap.appendChild(card);
+      });
+    }
+
+    // Load recommendations
+    async function loadRecommendations() {
+      try {
+        const token = localStorage.getItem('token') || localStorage.getItem('smart_token');
+        if (!token) return renderRecommendations([]);
+        const res = await fetch('/api/recommendations', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return renderRecommendations([]);
+        const data = await res.json();
+        renderRecommendations(data.recommended || []);
+      } catch (e) {
+        renderRecommendations([]);
+      }
+    }
+
+    // Render and load user's uploads
+    function renderUploads(list = []) {
+      const wrap = document.getElementById('myUploadsList');
+      if (!wrap) return;
+      wrap.innerHTML = '<div class="loading">Loading your uploads...</div>';
+      if (!list || !Array.isArray(list) || list.length === 0) {
+        wrap.innerHTML = '<div style="color: white; opacity: 0.9; padding: 40px; text-align: center; font-size: 18px;">No uploads yet. <a href="/frontend/upload.html" style="color: #10b981; font-weight: bold;">Upload now →</a></div>';
+        return;
+      }
+      const icon = (t) => {
+        const tt = (t || '').toLowerCase();
+        if (tt.includes('pdf')) return '📘';
+        if (tt.includes('ppt')) return '📊';
+        if (tt.includes('doc') || tt.includes('docx')) return '📝';
+        if (tt.includes('mp4') || tt.includes('video')) return '🎬';
+        if (tt.includes('txt') || tt.includes('zip')) return '📦';
+        return '📁';
+      };
+      const getStatusStyle = (status) => {
+        switch (status) {
+          case 'approved': case 'auto-approved': return 'bg-green-100 text-green-800';
+          case 'needs-review': return 'bg-yellow-100 text-yellow-800';
+          case 'pending': return 'bg-blue-100 text-blue-800';
+          case 'rejected': return 'bg-red-100 text-red-800';
+          default: return 'bg-gray-100 text-gray-800';
+        }
+      };
+      const getButton = (u) => {
+        const status = u.status || 'pending';
+        const isPDF = (u.fileType || '').toLowerCase().includes('pdf');
+        if (status === 'rejected') {
+          return `<div class="text-sm p-2 bg-red-100 text-red-800 rounded-lg">${u.aiReason || 'Rejected by AI'}</div>`;
+        }
+        if (!u.fileUrl) {
+          return '<div class="text-sm p-2 bg-gray-100 text-gray-600 rounded-lg">Processing URL...</div>';
+        }
+        const btnText = isPDF ? '👁️ Open PDF' : '⬇️ Download';
+        return `<button onclick="openFile('${u.fileUrl}', '${u._id}')" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-sm" style="margin-top:auto;">${btnText}</button>`;
+      };
+      list.forEach(u => {
+        const card = document.createElement('div');
+        card.style.cssText = 'background: rgba(255,255,255,0.95); border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap:12px; position:relative;';
+        const status = u.status || 'pending';
+        const statusDisplay = status.replace('-', ' ').toUpperCase();
+        const statusStyle = getStatusStyle(status);
+        card.innerHTML = `
+<button onclick="deleteUpload('${u._id}')" title="Delete" style="position:absolute; top:12px; right:12px; width:32px; height:32px; border:none; border-radius:50%; background:linear-gradient(135deg, #ef4444, #dc2626); color:white; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(239,68,68,0.4); transition:all 0.2s;">🗑</button>
+          <div style="font-size: 28px; margin-bottom: 8px;">${icon(u.fileType)}</div>
+          <div style="font-weight: 800; color:#111827; font-size:18px; line-height:1.3;">${u.title}</div>
+          <div style="color:#6b7280; font-size:14px;">${u.subject || 'Uncategorized'}</div>
+          <div class="status-badge" style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; ${statusStyle}; max-width: fit-content;">${statusDisplay}</div>
+          ${status !== 'rejected' ? `<div style="font-size: 12px; color: #6b7280;">AI Score: ${u.aiScore || 'N/A'}</div>` : ''}
+          <div style="cursor:pointer; user-select:none;" onclick="console.log('Click debug: ', ${JSON.stringify({id: u._id, url: u.fileUrl, status: status})}); openFile('${u.fileUrl || ''}', '${u._id}')" class="flex-1 text-center bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-sm" style="margin-top:auto;">🔥 TEST CLICK</div>
+          ${getButton(u)}
+        `;
+        wrap.appendChild(card);
+      });
+    }
+
+    // Global open file function
+    window.openFile = async (fileUrl, uploadId) => {
+      console.log('Button clicked!', { fileUrl, uploadId }); // DEBUG
+      if (!fileUrl) {
+        alert('File URL missing. Refresh dashboard.');
+        return;
+      }
+      // Direct open - no tracking to avoid errors
+      try {
+        window.open(fileUrl, '_blank');
+        console.log('Opened:', fileUrl);
+      } catch (e) {
+        console.error('Open failed:', e);
+        const a = document.createElement('a');
+        a.href = fileUrl;
+        a.download = fileUrl.split('/').pop();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    };
+
+    window.deleteUpload = async (uploadId) => {
+      if (!confirm('Delete this upload? This cannot be undone.')) return;
+      try {
+        const token = localStorage.getItem('token') || localStorage.getItem('smart_token');
+        const res = await fetch(`/api/uploads/${uploadId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          alert('Deleted!');
+          loadMyUploads(); // Refresh list
+          loadStats();
+        } else {
+          alert('Delete failed.');
+        }
+      } catch (e) {
+        console.error('Delete error:', e);
+        alert('Network error.');
+      }
+    };
+
+    async function loadMyUploads() {
+      try {
+        const token = localStorage.getItem('token') || localStorage.getItem('smart_token');
+        if (!token) {
+          renderUploads([]);
+          return;
+        }
+        const r = await fetch('/api/uploads/student', { 
+          headers: { 'Authorization': `Bearer ${token}` } 
+        });
+        if (!r.ok) {
+          console.error('Load uploads failed:', r.status);
+          const wrap = document.getElementById('myUploadsList');
+          if (wrap) wrap.innerHTML = '<div style="color: white; opacity: 0.9; padding: 40px; text-align: center; font-size: 18px;">Load failed. <button onclick="loadMyUploads()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold;">🔄 Retry</button></div>';
+          return;
+        }
+        const data = await r.json();
+        renderUploads(data);
+      } catch (e) {
+        console.error('Load uploads error:', e);
+        const wrap = document.getElementById('myUploadsList');
+        if (wrap) wrap.innerHTML = '<div style="color: white; opacity: 0.9; padding: 40px; text-align: center; font-size: 18px;">Network error. Check server & <button onclick="loadMyUploads()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold;">Retry</button></div>';
+      }
+    }
+
+    // Load stats from backend
+    async function loadStats() {
+      try {
+        const token = localStorage.getItem('token') || localStorage.getItem('smart_token');
+        if (!token) return;
+        
+        const response = await fetch(`${API_BASE}/student/dashboard`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('myUploads').textContent = data.myUploads || 0;
+          document.getElementById('pendingUploads').textContent = data.pendingUploads || 0;
+          document.getElementById('approvedUploads').textContent = data.approvedUploads || 0;
+          document.getElementById('myDownloads').textContent = data.downloads || 0;
+        }
+      } catch (error) {
+        console.log('Stats unavailable');
+      }
+    }
+
+    // Upload form handler
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData();
+      formData.append('title', document.getElementById('title').value);
+      formData.append('subject', document.getElementById('subject').value);
+      formData.append('file', document.getElementById('file').files[0]);
+      
+      try {
+        const token = localStorage.getItem('token') || localStorage.getItem('smart_token');
+        const response = await fetch(`${API_BASE}/uploads`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        
+        if (response.ok) {
+          alert('✅ Upload submitted for AI review!');
+          e.target.reset();
+          loadStats(); // Refresh stats
+          loadRecommendations(); // Refresh personalized section
+          loadMyUploads(); // Show in My Uploads
+        } else {
+          alert('❌ Upload failed. Try again.');
+        }
+      } catch (error) {
+        alert('❌ Network error. Check server.');
+      }
+    });
+
+    // Load on page ready
+    function init() {
+      loadStats();
+      loadRecommendations();
+      loadMyUploads();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>

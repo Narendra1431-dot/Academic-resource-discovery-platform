@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload | SmartAcademic</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <div class="flex">
+    <!-- Sidebar -->
+    <iframe src="/frontend/components/sidebar.html" class="w-64 min-h-screen border-0 shadow-2xl bg-white"></iframe>
+
+    <!-- Main -->
+    <main class="flex-1 p-8 md:p-12">
+      <header class="mb-10">
+        <h1 class="text-3xl md:text-4xl font-black text-slate-900">Upload Resource</h1>
+        <p class="text-slate-600">Submit your study material for AI verification.</p>
+      </header>
+
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Form -->
+        <div class="lg:col-span-2 bg-white rounded-3xl shadow-xl p-8 border border-white/60">
+          <form id="uploadForm" class="space-y-6">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Resource Title</label>
+              <input id="title" type="text" required placeholder="e.g., Data Structures Notes"
+                class="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Subject</label>
+              <input id="subject" type="text" required placeholder="e.g., Data Structures"
+                class="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Resource Type</label>
+              <select id="resourceType" class="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="notes">Notes</option>
+                <option value="ppt">PPT Slides</option>
+                <option value="pyq">Previous Question Papers</option>
+                <option value="textbook">Textbooks</option>
+              </select>
+              <p class="text-xs text-slate-500 mt-1">Type is advisory; backend determines final type from file.</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Upload File</label>
+              <input id="file" type="file" required
+                class="w-full border border-dashed border-slate-300 rounded-xl px-4 py-6 bg-slate-50" />
+              <p class="text-xs text-slate-500 mt-1">Supported: pdf, doc, docx, ppt, pptx, txt, mp4 (max 50MB)</p>
+            </div>
+
+            <button type="submit"
+              class="w-full bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:opacity-95">
+              <i class="fas fa-rocket mr-2"></i> Upload & Send for AI Review
+            </button>
+          </form>
+        </div>
+
+        <!-- Tips -->
+        <aside class="bg-white rounded-3xl shadow-xl p-8 border border-white/60">
+          <h2 class="text-xl font-bold text-slate-900 mb-4">Submission Tips</h2>
+          <ul class="list-disc list-inside text-slate-600 space-y-2">
+            <li>Provide a clear, descriptive title.</li>
+            <li>Choose the correct subject to help others discover your resource.</li>
+            <li>Ensure the file is legible and properly formatted.</li>
+            <li>AI will auto-verify and set status accordingly.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="mt-12">
+        <a href="/frontend/student-dashboard.html" class="text-indigo-600 font-semibold hover:underline">
+          <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+
+    function notify(type, msg) {
+      alert((type === 'success' ? '✅ ' : '❌ ') + msg);
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('title', document.getElementById('title').value.trim());
+      formData.append('subject', document.getElementById('subject').value.trim());
+      const fileInput = document.getElementById('file');
+      if (!fileInput.files[0]) return notify('error', 'Please select a file.');
+      formData.append('file', fileInput.files[0]);
+
+      try {
+        const token = localStorage.getItem('token') || localStorage.getItem('smart_token');
+        if (!token) return notify('error', 'You must be logged in.');
+        const res = await fetch(`${API_BASE}/uploads`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          console.error('Upload error:', t);
+          return notify('error', 'Upload failed.');
+        }
+        notify('success', 'Upload submitted for AI review!');
+        e.target.reset();
+      } catch (err) {
+        console.error(err);
+        notify('error', 'Network error.');
+      }
+    });
+  </script>
+</body>
+</html>

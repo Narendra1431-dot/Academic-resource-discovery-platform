@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings | SmartAcademic</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-indigo-50 to-purple-50 min-h-screen">
+  <nav class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-cog text-3xl text-indigo-600"></i>
+        <h1 class="text-2xl font-bold text-gray-800">Settings</h1>
+      </div>
+      <button onclick="window.location.href='/frontend/student-dashboard.html'" class="bg-indigo-600 text-white px-6 py-2 rounded-xl hover:bg-indigo-700 transition-all">
+        <i class="fas fa-arrow-left mr-2"></i>Dashboard
+      </button>
+    </div>
+  </nav>
+
+  <div class="max-w-2xl mx-auto px-6 py-12">
+    <div class="bg-white rounded-3xl shadow-2xl p-12 border border-gray-200">
+      <div id="settings-form">
+        <!-- Dynamic settings loaded here -->
+      </div>
+      
+      <div class="flex gap-4 mt-12 pt-8 border-t border-gray-200">
+        <button onclick="saveSettings()" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-8 rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:from-indigo-700 hover:to-purple-700 transition-all">
+          <i class="fas fa-save mr-3"></i>Save Settings
+        </button>
+        <button onclick="resetSettings()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-4 px-8 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all">
+          <i class="fas fa-sync-alt mr-3"></i>Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    
+    async function loadSettings() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/settings`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const settings = await response.json();
+        
+        document.getElementById('settings-form').innerHTML = `
+          <h2 class="text-3xl font-bold text-gray-900 mb-8 border-b pb-6 border-gray-200">
+            <i class="fas fa-palette mr-3 text-indigo-600"></i>Appearance
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div>
+              <label class="block text-lg font-semibold text-gray-700 mb-4">Theme</label>
+              <div class="space-y-3">
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="theme" value="light" ${settings.theme === 'light' ? 'checked' : ''} class="mr-3 text-indigo-600">
+                  <span>☀️ Light</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="theme" value="dark" ${settings.theme === 'dark' ? 'checked' : ''} class="mr-3 text-indigo-600">
+                  <span>🌙 Dark</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="theme" value="auto" ${settings.theme === 'auto' ? 'checked' : ''} class="mr-3 text-indigo-600">
+                  <span>💻 System</span>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label class="block text-lg font-semibold text-gray-700 mb-4">Language</label>
+              <select id="language" class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-500 focus:border-transparent shadow-sm">
+                <option value="en" ${settings.language === 'en' ? 'selected' : ''}>English</option>
+                <option value="hi" ${settings.language === 'hi' ? 'selected' : ''}>हिंदी</option>
+                <option value="ta" ${settings.language === 'ta' ? 'selected' : ''}>தமிழ்</option>
+              </select>
+            </div>
+          </div>
+
+          <h2 class="text-3xl font-bold text-gray-900 mb-8 border-b pb-6 border-gray-200">
+            <i class="fas fa-bell mr-3 text-amber-600"></i>Notifications
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <label class="flex items-center p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 cursor-pointer transition-all">
+              <input type="checkbox" id="email-notif" ${settings.notifications?.email ? 'checked' : ''} class="w-5 h-5 text-indigo-600 mr-4 rounded focus:ring-indigo-500">
+              <span class="font-medium">Email notifications</span>
+            </label>
+            <label class="flex items-center p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 cursor-pointer transition-all">
+              <input type="checkbox" id="upload-notif" ${settings.notifications?.uploadApproval ? 'checked' : ''} class="w-5 h-5 text-indigo-600 mr-4 rounded focus:ring-indigo-500">
+              <span class="font-medium">Upload approval alerts</span>
+            </label>
+            <label class="flex items-center p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 cursor-pointer transition-all">
+              <input type="checkbox" id="resource-notif" ${settings.notifications?.newResources ? 'checked' : ''} class="w-5 h-5 text-indigo-600 mr-4 rounded focus:ring-indigo-500">
+              <span class="font-medium">New resources</span>
+            </label>
+          </div>
+
+          <h2 class="text-3xl font-bold text-gray-900 mb-8 border-b pb-6 border-gray-200">
+            <i class="fas fa-user-shield mr-3 text-red-600"></i>Privacy
+          </h2>
+          <div class="space-y-4">
+            <label class="flex items-center p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 cursor-pointer transition-all">
+              <input type="checkbox" id="profile-public" ${settings.privacy?.profilePublic ? 'checked' : ''} class="w-5 h-5 text-indigo-600 mr-4 rounded focus:ring-indigo-500">
+              <span class="font-medium">Make profile public</span>
+            </label>
+            <label class="flex items-center p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 cursor-pointer transition-all">
+              <input type="checkbox" id="resources-public" ${settings.privacy?.resourcesPublic ? 'checked' : ''} class="w-5 h-5 text-indigo-600 mr-4 rounded focus:ring-indigo-500">
+              <span class="font-medium">Share uploads publicly</span>
+            </label>
+          </div>
+
+          <div class="mt-12 pt-8 border-t border-gray-200 space-y-4">
+            <h3 class="text-2xl font-bold text-gray-900">Profile</h3>
+            <textarea id="bio" rows="4" placeholder="Tell us about yourself..." class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-500 focus:border-transparent resize-vertical">${settings.profile?.bio || ''}</textarea>
+            <div>
+              <label class="block text-lg font-semibold text-gray-700 mb-2">Profile Picture</label>
+              <input type="file" id="avatar" accept="image/*" class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-500">
+              ${settings.profile?.avatar ? `<img src="${settings.profile.avatar}" alt="Avatar" class="w-24 h-24 rounded-full object-cover mt-4 border-4 border-indigo-200">` : ''}
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Settings load error:', error);
+      }
+    }
+
+    async function saveSettings() {
+      const settings = {
+        theme: document.querySelector('input[name="theme"]:checked')?.value || 'light',
+        language: document.getElementById('language').value,
+        notifications: {
+          email: document.getElementById('email-notif').checked,
+          uploadApproval: document.getElementById('upload-notif').checked,
+          newResources: document.getElementById('resource-notif').checked
+        },
+        privacy: {
+          profilePublic: document.getElementById('profile-public').checked,
+          resourcesPublic: document.getElementById('resources-public').checked
+        },
+        profile: {
+          bio: document.getElementById('bio').value
+        }
+      };
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(settings)
+        });
+
+        if (response.ok) {
+          alert('✅ Settings saved successfully!');
+        } else {
+          alert('❌ Save failed');
+        }
+      } catch (error) {
+        console.error('Save error:', error);
+        alert('❌ Network error');
+      }
+    }
+
+    function resetSettings() {
+      if (confirm('Reset all settings to default?')) {
+        window.location.reload();
+      }
+    }
+
+    // Load settings on page load
+    document.addEventListener('DOMContentLoaded', loadSettings);
+  </script>
+</body>
+</html>
