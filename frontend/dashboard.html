@@ -441,7 +441,7 @@ Admin dashboard
   </div>
 
   <script>
-    const API_BASE = 'http://localhost:5000/api';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
     const TOKEN_KEY = 'smart_academic_token';
 
     let dashboardData = {};

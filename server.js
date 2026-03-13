@@ -18,7 +18,10 @@ const recommendationRoutes = require('./routes/recommendations');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? ['https://your-netlify-site.netlify.app'] : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.static('.')); // serve current dir (index.html)
 app.use('/uploads', express.static('uploads'));
